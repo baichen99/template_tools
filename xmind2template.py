@@ -165,7 +165,7 @@ def checkContainer(node):
     return False
 
 def checkTable(node):
-    # 是否为容器
+    # 是否为表格
     if node.get('title').startswith('table:'):
         return True
     return False
