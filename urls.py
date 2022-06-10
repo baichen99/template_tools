@@ -1,4 +1,5 @@
 base_url = 'http://matdata.shu.edu.cn'
+
 # 查看模板信息
 info_url = base_url + '/mgd/api/data/num'
 # 上传xml文件添加数据
@@ -9,4 +10,9 @@ upload_url = base_url + '/mgd/api/data/upload'
 file_upload_url = base_url + '/mgd/api/tool/file/upload'
 # 登录
 login_url = base_url + '/mgd/api/user/login'
-
+# 删除xml
+delete_url = base_url + 'mgd/api/data/delete'
+# 下载xml
+download_url = base_url + '/mgd/api/data/xml'
+# 查看数据列表
+data_list_url = base_url + '/mgd/api/data/list'

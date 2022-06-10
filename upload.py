@@ -2,10 +2,9 @@ import os
 import json
 import shutil
 
-import requests
-from request import request
+from .request import request
 
-from urls import file_upload_url, info_url, add_url, login_url
+from .urls import file_upload_url, info_url, add_url, login_url, data_list_url
 
 
 def upload_asset(file_obj, token):
@@ -30,6 +29,21 @@ def upload_xml(file_path, name, template_id, team_id, token):
     }
     rsp = request(add_url, 'post', json=form)
     return rsp
+
+def get_all_data(template_name, team_id, token, num=1000):
+    '''get all data json of template
+    Args:
+        template_name:  e.g. 吸波材料
+    '''
+    data = {
+        "pageNo": 1,
+        "pageSize": num,
+        "teamId": team_id,
+        "templateName": template_name
+    }
+    rsp = request(data_list_url, 'post', data, token)
+    data = json.loads(rsp.text).get('data', {})
+    return data
 
 def get_token(username, password):
     data = {
