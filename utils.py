@@ -96,10 +96,10 @@ def make_python_identifier(string, namespace=None, reserved_words=None,
         reserved_words = []
 
     # create a working copy (and make it lowercase, while we're at it)
-    s = string.lower()
+    # s = string.lower()
 
     # remove leading and trailing whitespace
-    s = s.strip()
+    s = string.strip()
 
     # Make spaces into underscores
     s = re.sub('[\\s\\t\\n]+', '_', s)
