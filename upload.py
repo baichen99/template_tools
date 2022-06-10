@@ -41,7 +41,7 @@ def get_all_data(template_name, team_id, token, num=1000):
         "teamId": team_id,
         "templateName": template_name
     }
-    rsp = request(data_list_url, 'post', data, token)
+    rsp = request(data_list_url, 'post', token, json=data)
     data = json.loads(rsp.text).get('data', {})
     return data
 
