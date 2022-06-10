@@ -1,20 +1,36 @@
+import re
 import os
 import time
 import json
 from pygtrans import Translate, Null
 import xmindparser
-from utils import make_python_identifier
+from .utils import make_python_identifier
 
 
 client = Translate()
 
 # ------------ create a node ------------
-def createValueNode(node):
+def getNodeDesc(node):
+    """get key, name(zhCN), name(enUS) of node
+    """
     title = node.get('title')
-    en = zh2en(title)
+    if title.startswith('file:') and title.startswith('table:'):
+        idx = title.index(':')
+        title = title[idx+1:]
+    if '[' in title and ']' in title:
+        zh, name = re.findall(r'(.*?)\[(.*?)\]$', title)[0]
+        en = zh2en(zh)
+    else:
+        zh = title
+        en = zh2en(zh)
+        name = escape(en)
+    return name, zh, en
+
+def createValueNode(node):
+    name, zh, en = getNodeDesc(node)
     return {
             "_id": hash(time.time()),
-            "name": escape(en),
+            "name":name,
             "type": "uncheck-stringtype",
             "typename": "字符型",
             "default": "",
@@ -22,17 +38,15 @@ def createValueNode(node):
             "required": "false",
             "childrenVisible": "true",
             "enUS": en,
-            "zhCN": title,
+            "zhCN": zh,
             "children": []
         }
 
 def createFileNode(node):
-    title = node.get('title')
-    en = zh2en(title)
-    file = title[len('file:'):]
+    name, zh, en = getNodeDesc(node)
     return {
         "_id": hash(time.time()),
-        "name": escape(en),
+        "name": name,
         "type": "file-list",
         "typename": "文件型",
         "default": "",
@@ -40,18 +54,18 @@ def createFileNode(node):
         "required": "false",
         "childrenVisible": "true",
         "enUS": en,
-        "zhCN": file,
+        "zhCN": zh,
         "children": []
     }
 
 def createUnitValueNode(node):
-    title = node.get('title')
-    en = zh2en(title)
+    name, zh, en = getNodeDesc(node)
+    
     unit = node.get('topics')[0].get('title')
     unit = unit[len('unit:'):]
     return {
             "_id": hash(time.time()),
-            "name": escape(en),
+            "name": name,
             "type": "value-with-unit",
             "typename": "带单位数值",
             "default": "",
@@ -59,7 +73,7 @@ def createUnitValueNode(node):
             "required": "false",
             "childrenVisible": "true",
             "enUS": en,
-            "zhCN": title,
+            "zhCN": zh,
             "children": [
                 {
                     "_id": hash(time.time()),
@@ -91,8 +105,7 @@ def createUnitValueNode(node):
         }
 
 def createTableNode(node):
-    title = node.get('title')
-    en = zh2en(title)
+    name, zh, en = getNodeDesc(node)
     children = []
     for child in node.get('topics'):
         if checkValueFiled(child):
@@ -103,7 +116,7 @@ def createTableNode(node):
             children.append(createFileNode(child))
     return {
             "_id": hash(time.time()),
-            "name": escape(en),
+            "name": name,
             "type": "container",
             "typename": "表格型",
             "default": "",
@@ -111,13 +124,12 @@ def createTableNode(node):
             "required": "false",
             "childrenVisible": "true",
             "enUS": en,
-            "zhCN": title,
+            "zhCN": zh,
             "children": children
     }
 
 def createContainerNode(node):
-    title = node.get('title')
-    en = zh2en(title)
+    name, zh, en = getNodeDesc(node)
     children = []
     for child in node.get('topics'):
         if checkValueFiled(child):
@@ -130,7 +142,7 @@ def createContainerNode(node):
             children.append(createContainerNode(child))
     return {
             "_id": hash(time.time()),
-            "name": escape(en),
+            "name": name,
             "type": "container",
             "typename": "容器型",
             "default": "",
@@ -138,7 +150,7 @@ def createContainerNode(node):
             "required": "false",
             "childrenVisible": "true",
             "enUS": en,
-            "zhCN": title,
+            "zhCN": zh,
             "children": children
     }
 # ------------ checkers ------------
@@ -154,7 +166,8 @@ def checkFileFiled(node):
 
 def checkValueFiled(node):
     # 是否为叶子结点/是否有孩子
-    if not node.get('topics') and not any([t in node.get('title') for t in ['unit', 'file']]):
+    # 如果没有孩子, 且不是unit, table, file结点就是叶子结点
+    if not node.get('topics') and not any([t in node.get('title') for t in ['unit', 'table', 'file']]):
         return True
     return False
 
