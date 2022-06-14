@@ -1,6 +1,15 @@
+import os
 import re
 import keyword
+import pathlib
+import requests
+from uuid import uuid4
+
 from http.cookies import SimpleCookie
+from xml.etree import ElementTree
+from mimetypes import guess_extension
+
+from .request import request
 
 def cookieStr_to_dict(cookie_str):
     cookie = SimpleCookie()
@@ -9,6 +18,7 @@ def cookieStr_to_dict(cookie_str):
     for key, morsel in cookie.items():
         cookies[key] = morsel.value
     return cookies
+
 
 def make_python_identifier(string, namespace=None, reserved_words=None,
                            convert='drop', handle='force'):
@@ -106,7 +116,8 @@ def make_python_identifier(string, namespace=None, reserved_words=None,
 
     if convert == 'hex':
         # Convert invalid characters to hex
-        s = ''.join([c.encode("hex") if re.findall('[^0-9a-zA-Z_]', c) else c for c in s])
+        s = ''.join([c.encode("hex") if re.findall(
+            '[^0-9a-zA-Z_]', c) else c for c in s])
 
     elif convert == 'drop':
         # Remove invalid characters
@@ -120,7 +131,8 @@ def make_python_identifier(string, namespace=None, reserved_words=None,
            s in namespace.values() or
            s in reserved_words):
         if handle == 'throw':
-            raise NameError(s + ' already exists in namespace or is a reserved word')
+            raise NameError(
+                s + ' already exists in namespace or is a reserved word')
         if handle == 'force':
             if re.match(".*?_\d+$", s):
                 i = re.match(".*?_(\d+)$", s).groups()[0]
@@ -131,3 +143,72 @@ def make_python_identifier(string, namespace=None, reserved_words=None,
     namespace[string] = s
 
     return s, namespace
+
+def getFilename(headers):
+    d = headers.get('content-disposition', '')
+    fname = re.findall("filename=(.+)", d)
+    if fname:
+        return fname[0]
+    return
+
+def download(url, token, save_path=None):
+    rsp = request(url, 'get', token=token)
+    if save_path:
+        with open(save_path, 'wb') as f:
+            f.write(r.content)
+    else:
+        return r.content
+
+def getFilenameAndSave(url, output_dir, filename=None):
+    # 下载附件并保存到文件夹，返回存储的文件名
+    r = requests.get(url)
+    if not filename:
+        filename = getfilename(r.headers)
+        if not filename:
+            ext = pathlib.Path(filename).suffix or guess_extension(
+                r.headers['content-type'].partition(';')[0].strip())
+            filename = f'{str(uuid4())}{ext}'
+    dest_path = os.path.join(output_dir, filename)
+    with open(dest_path, 'wb') as f:
+        f.write(r.content)
+    return filename
+
+
+def parse_xml(file_path):
+    tree = ElementTree.parse(file_path)
+    return tree
+
+
+def replaceUrlWithImport(output_dir, tree):
+    # 遍历所有node，将url对应的资源下载并保存，然后替换原来的url为文件路径
+    root = tree.getroot()
+    all_nodes = []
+    for elem in root.iter():
+        all_nodes.append(elem)
+    for node in all_nodes:
+        # 单独处理文件标签
+        if node.tag == 'file':
+            filename = ''
+            download_url = ''
+            for child in node:
+                # 获取附件文件名
+                if child.tag == 'name' and child.text:
+                    filename = child.text
+                # 获取附件url
+                if child.tag == 'url' and child.text:
+                    if child.text.startswith('/'):
+                        download_url = 'http://matdata.shu.edu.cn' + child.text
+                    elif child.text.startswith('http'):
+                        download_url = child.text
+                    elif child.text.startswith('import:'):
+                        break
+                    elif child.text == '':
+                        break
+                    else:
+                        download_url = 'http://' + child.text
+                    child.text = f'import:{filename}'
+        #   print(download_url)
+            if download_url == '' or download_url.startswith('import:'):
+                continue
+            getFilenameAndSave(download_url, output_dir, filename)
+    return tree

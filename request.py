@@ -6,6 +6,7 @@ def request(url, method, token='', *args, **kwargs):
     headers = kwargs.get('headers', {})
     if not headers:
         headers = {
+            'Proxy-Connection': 'keep-alive',
             'Authorization': f'Bearer {token}',
             'Connection': 'keep-alive',
             'Accept-Encoding': 'gzip, deflate, br',

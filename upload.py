@@ -3,7 +3,6 @@ import json
 import shutil
 
 from .request import request
-
 from .urls import file_upload_url, info_url, add_url, login_url, data_list_url
 
 
@@ -17,7 +16,7 @@ def upload_asset(file_obj, token):
     return f'/mgd/rest/blob/download/{file_id}'
 
 def upload_xml(file_path, name, template_id, team_id, token):
-    with open(file_path, 'r', encoding='utf-8') as f:
+    with open(file_path, 'r', encoding='utf-8', newline='\r\n') as f:
         s = f.read()
     form = {
         'name': name,
@@ -27,8 +26,8 @@ def upload_xml(file_path, name, template_id, team_id, token):
         'content': s,
         'type': 1
     }
-    rsp = request(add_url, 'post', json=form)
-    return rsp
+    rsp = request(add_url, 'post', json=form, token=token)
+    return json.loads(rsp.text)
 
 def get_all_data(template_name, team_id, token, num=1000):
     '''get all data json of template

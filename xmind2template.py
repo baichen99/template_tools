@@ -17,6 +17,7 @@ def getNodeDesc(node):
     if title.startswith('file:') and title.startswith('table:'):
         idx = title.index(':')
         title = title[idx+1:]
+    # custom key support
     if '[' in title and ']' in title:
         zh, name = re.findall(r'(.*?)\[(.*?)\]$', title)[0]
         en = zh2en(zh)
@@ -112,7 +113,7 @@ def createTableNode(node):
             children.append(createValueNode(child))
         elif checkUnitValueFiled(child):
             children.append(createUnitValueNode(child))
-        elif checkFileFiled(node):
+        elif checkFileFiled(child):
             children.append(createFileNode(child))
     return {
             "_id": hash(time.time()),
@@ -128,6 +129,37 @@ def createTableNode(node):
             "children": children
     }
 
+def createArrayNode(node):
+    name, zh, en = getNodeDesc(node)
+    children = []
+    for child in node.get('topics'):
+        if checkValueFiled(child):
+            children.append(createValueNode(child))
+        elif checkUnitValueFiled(child):
+            children.append(createUnitValueNode(child))
+        elif checkFileFiled(child):
+            children.append(createFileNode(child))
+        elif checkTable(child):
+            children.append(createTableNode(child))
+        elif checkArray(child):
+            children.append(createArrayNode(child))
+        elif checkContainer(child):
+            children.append(createContainerNode(child))
+    return {
+            "_id": hash(time.time()),
+            "name": name,
+            "type": "array",
+            "typename": "数组型",
+            "default": "",
+            "fixed": "",
+            "required": false,
+            "childrenVisible": true,
+            "enUS": en,
+            "zhCN": zh,
+            "children": children
+        }
+
+
 def createContainerNode(node):
     name, zh, en = getNodeDesc(node)
     children = []
@@ -138,6 +170,10 @@ def createContainerNode(node):
             children.append(createUnitValueNode(child))
         elif checkFileFiled(child):
             children.append(createFileNode(child))
+        elif checkTable(child):
+            children.append(createTableNode(child))
+        elif checkArray(child):
+            children.append(createArrayNode(child))
         elif checkContainer(child):
             children.append(createContainerNode(child))
     return {
@@ -183,6 +219,12 @@ def checkTable(node):
         return True
     return False
 
+def checkArray(node):
+    # 是否为数组
+    if node.get('title').startswith('array:'):
+        return True
+    return False
+
 def getChildrenName(node):
     topics = node.get('topics')
     return [topic.get('title') for topic in topics]
@@ -198,40 +240,6 @@ def zh2en(content):
     else:
         return text.translatedText
 
-# -------- get levels of xmind -------
-def createValueObj(node):
-    title = node.get('title')
-    return {
-        title: []
-    }
-
-def createUnitValueObj(node):
-    title = node.get('title')
-    return {
-        title: []
-    }
-
-def createContainerObj(node):
-    title = node.get('title')
-    children = []
-    for child in node.get('topics'):
-        if checkValueFiled(child):
-            children.append(createValueObj(child))
-        elif checkUnitValueFiled(child):
-            children.append(createUnitValueObj(child))
-        elif checkContainer(child):
-            children.append(createContainerObj(child))
-    return {
-        title: children
-    }
-
-
-# # 保存层级关系，方便录入数据
-# with open('levels.json', 'w', encoding='utf-8') as f:
-#     level = {}
-#     out = createContainerObj(data)
-#     out = json.dumps(out, ensure_ascii=False)
-#     f.write(out)
 
 def getTemplate(xmind_path, dest='template.json'):
     xmindparser.xmind_to_json(xmind_path)
