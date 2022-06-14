@@ -152,8 +152,8 @@ def createArrayNode(node):
             "typename": "数组型",
             "default": "",
             "fixed": "",
-            "required": false,
-            "childrenVisible": true,
+            "required": False,
+            "childrenVisible": True,
             "enUS": en,
             "zhCN": zh,
             "children": children
