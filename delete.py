@@ -16,7 +16,17 @@ def delete_all(team_id, template_name, token):
         data = {
             'dataId': id_
         }
-        rsp = request(delete_url, 'post', data, token)
+        rsp = request(delete_url, 'post', token=token, json=data)
+        if rsp.status_code != 200:
+            print(rsp.text)
+            
+def delete(all_id, token):
+    '''delete all data of template'''
+    for id_ in all_id:
+        data = {
+            'dataId': id_
+        }
+        rsp = request(delete_url, 'post', token, json=data)
         if rsp.status_code != 200:
             print(rsp.text)
 

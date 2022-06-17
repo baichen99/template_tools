@@ -26,7 +26,7 @@ def upload_xml(file_path, name, template_id, team_id, token):
         'content': s,
         'type': 1
     }
-    rsp = request(add_url, 'post', json=form, token=token)
+    rsp = request(add_url, 'post', token, json=form)
     return json.loads(rsp.text)
 
 def get_all_data(template_name, team_id, token, num=1000):

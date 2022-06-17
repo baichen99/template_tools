@@ -11,7 +11,7 @@ file_upload_url = base_url + '/mgd/api/tool/file/upload'
 # 登录
 login_url = base_url + '/mgd/api/user/login'
 # 删除xml
-delete_url = base_url + 'mgd/api/data/delete'
+delete_url = base_url + '/mgd/api/data/delete'
 # 下载xml
 download_url = base_url + '/mgd/api/data/xml'
 # 查看数据列表
