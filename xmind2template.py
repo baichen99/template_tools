@@ -118,7 +118,7 @@ def createTableNode(node):
     return {
             "_id": hash(time.time()),
             "name": name,
-            "type": "container",
+            "type": "table",
             "typename": "表格型",
             "default": "",
             "fixed": "",
