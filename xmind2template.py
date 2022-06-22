@@ -14,7 +14,7 @@ def getNodeDesc(node):
     """get key, name(zhCN), name(enUS) of node
     """
     title = node.get('title')
-    if title.startswith('file:') and title.startswith('table:'):
+    if title.startswith('file:') or title.startswith('table:')or title.startswith('array:'):
         idx = title.index(':')
         title = title[idx+1:]
     # custom key support
