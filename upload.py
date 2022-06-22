@@ -1,9 +1,10 @@
 import os
 import json
 import shutil
+import tempfile
 
 from .request import request
-from .urls import file_upload_url, info_url, add_url, login_url, data_list_url
+from .urls import file_upload_url, info_url, add_url, login_url, data_list_url, upload_url
 
 
 def upload_asset(file_obj, token):
@@ -29,6 +30,23 @@ def upload_xml(file_path, name, template_id, team_id, token):
     rsp = request(add_url, 'post', token, json=form)
     return json.loads(rsp.text)
 
+def upload_zip(file_path, name, team_id, template_id, token, compress=False):
+    form = {
+        'name': name,
+        'teamId': team_id,
+        'templateEditionId': template_id,
+    }
+    if compress:
+        tmp_dir = tempfile.TemporaryDirectory()
+
+        zip_path = os.path.join(tmp_dir.name, 'data.zip')
+        shutil.make_archive(os.path.join(tmp_dir.name, 'data'), 'zip', file_path)
+        file_path = zip_path
+
+    rsp = request(upload_url, 'post', token=token, data=form, files={'file': open(file_path, 'rb')})
+    return rsp
+
+    
 def get_all_data(template_name, team_id, token, num=1000):
     '''get all data json of template
     Args:
