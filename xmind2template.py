@@ -17,13 +17,20 @@ def getNodeDesc(node):
     if title.startswith('file:') or title.startswith('table:')or title.startswith('array:'):
         idx = title.index(':')
         title = title[idx+1:]
+    en, name = None, None
     # custom key support
     if '[' in title and ']' in title:
-        zh, name = re.findall(r'(.*?)\[(.*?)\]$', title)[0]
-        en = zh2en(zh)
+        zh = re.findall(r'^(.*?)[\{\[]', title)[0]
+        name = re.findall(r'\[(.*?)\]', title)[0]
+    # custom en suport
+    elif '{' in title and '}' in title:
+        zh = re.findall(r'^(.*?)[\{\[]', title)[0]
+        en = re.findall(r'\{(.*?)\}', title)[0]
     else:
         zh = title
+    if not en:
         en = zh2en(zh)
+    if not name:
         name = escape(en)
     return name, zh, en
 
@@ -230,10 +237,23 @@ def getChildrenName(node):
     return [topic.get('title') for topic in topics]
 
 # ------ translator ------
+def contain_chinese(s):
+    """
+    检查整个字符串是否包含中文
+    :param string: 需要检查的字符串
+    :return: bool
+    """
+    for ch in s:
+        if u'\u4e00' <= ch <= u'\u9fff':
+            return True
+    return False
+
 def escape(s):
     return make_python_identifier(s)[0]
 
 def zh2en(content):
+    if not contain_chinese(content):
+        return content
     text = client.translate(content, target='en')
     if isinstance(text, Null):
         return None
@@ -241,10 +261,13 @@ def zh2en(content):
         return text.translatedText
 
 
-def getTemplate(xmind_path, dest='template.json'):
-    xmindparser.xmind_to_json(xmind_path)
-    json_file = os.path.splitext(xmind_path)[0] + '.json'
-    data = json.load(open(json_file))[0].get('topic')
+def getTemplate(xmind_path, from_json=None, dest='template.json'):
+    if not from_json:
+        xmindparser.xmind_to_json(xmind_path)
+        json_file = os.path.splitext(xmind_path)[0] + '.json'
+        data = json.load(open(json_file))[0].get('topic')
+    else:
+        data = json.load(open(from_json))[0].get('topic')
 
     with open(dest, 'w', encoding='utf-8') as f:
         out = createContainerNode(data)
