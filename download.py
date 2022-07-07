@@ -1,9 +1,6 @@
 import os
-import json
-import shutil
 
 from .request import request
-from .upload import get_all_data
 from .urls import download_url
 
 def download_all_xmls(all_id, token, output_dir):
