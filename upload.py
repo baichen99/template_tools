@@ -27,12 +27,14 @@ def upload_asset(file_obj, token):
     return f'/mgd/rest/blob/download/{file_id}'
 
 
-def upload_xml(file_path, name, template_id, team_id, token):
+def upload_xml(file_path, name, team_name, template_name, token):
+    team_id = get_team_id_by_team_name(team_name, token)
+    _, template_edition_id = get_template_id_by_template_name(team_name, template_name, token)
     with open(file_path, 'r', encoding='utf-8', newline='\r\n') as f:
         s = f.read()
     form = {
         'name': name,
-        'templateEditionId': template_id,
+        'templateEditionId': template_edition_id,
         'teamId': team_id,
         'keywords': '',
         'content': s,
@@ -42,11 +44,13 @@ def upload_xml(file_path, name, template_id, team_id, token):
     return json.loads(rsp.text)
 
 
-def upload_zip(file_path, name, team_id, template_id, token, compress=False):
+def upload_zip(file_path, name, team_name, template_name, token, compress=False):
+    team_id = get_team_id_by_team_name(team_name, token)
+    _, template_edition_id = get_template_id_by_template_name(team_name, template_name, token)
     form = {
         'name': name,
         'teamId': team_id,
-        'templateEditionId': template_id,
+        'templateEditionId': template_edition_id,
     }
     if compress:
         tmp_dir = tempfile.TemporaryDirectory()
