@@ -110,7 +110,7 @@ def make_python_identifier(string, namespace=None, reserved_words=None,
 
     # remove leading and trailing whitespace
     if not string:
-        s = ''
+        string = ''
     s = string.strip()
 
     # Make spaces into underscores
