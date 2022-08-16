@@ -2,8 +2,10 @@ import os
 import json
 import shutil
 import tempfile
+from glob import glob
 
 import requests
+from tqdm import tqdm
 
 from .request import request
 from .urls import base_url, \
@@ -16,6 +18,7 @@ from .urls import base_url, \
     template_url, \
     team_url
 
+from .settings import username, password
 
 def upload_asset(file_obj, token):
     rsp = request(file_upload_url, 'post', token=token, json={'typeCode': 'file'}, files={'file': file_obj})
@@ -26,6 +29,22 @@ def upload_asset(file_obj, token):
         return None
     return f'/mgd/rest/blob/download/{file_id}'
 
+
+def upload_job(type='xml', team_name='', template_name='', file_path='', compress=False, token=None):
+    token = token or get_token(username, password)
+    idx = get_records_num(team_name, template_name, token) + 1
+    if type == 'xml':
+        for file in tqdm(glob(os.path.join(file_path, '*.xml'))):
+            upload_xml(file, f'{template_name}_{idx}', team_name, template_name, token)
+            idx += 1
+    elif type == 'zip':
+        for folder in tqdm(glob(os.path.join(file_path, '*'))):
+            if not os.path.isdir(folder):
+                continue
+            upload_zip(folder, f'{template_name}_{idx}', team_name, template_name, token, compress)
+            idx += 1
+    else:
+        raise Exception('type error')
 
 def upload_xml(file_path, name, team_name, template_name, token):
     team_id = get_team_id_by_team_name(team_name, token)

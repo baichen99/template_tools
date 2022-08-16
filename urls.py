@@ -1,5 +1,5 @@
-base_url = 'http://matdata.shu.edu.cn'
-# base_url = 'https://matdata.cloud'
+# base_url = 'http://matdata.shu.edu.cn'
+base_url = 'https://matdata.cloud'
 # 列出所有团队
 team_url = base_url + '/mgd/api/team/list'
 # 列出团队模板
