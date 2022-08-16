@@ -1,6 +1,11 @@
+import json
 import requests
+from template_tools.settings import token
+from retrying import retry
 
-def request(url, method, token='', *args, **kwargs):
+
+@retry(stop_max_attempt_number=3)
+def request(url, method, token=token, *args, **kwargs):
     headers = kwargs.get('headers', {}) or {
         'Authorization': f'Bearer {token}',
         'Connection': 'keep-alive',
@@ -11,5 +16,8 @@ def request(url, method, token='', *args, **kwargs):
     }
     if kwargs.get('headers'):
         kwargs.pop('headers')
-    rsp = getattr(requests, method)(url, headers=headers, *args, **kwargs)
-    return rsp
+    try:
+        rsp = getattr(requests, method)(url, headers=headers, *args, **kwargs)
+    except Exception as e:
+        print(e)
+    return json.loads(rsp.text)

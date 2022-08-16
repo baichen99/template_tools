@@ -1,5 +1,5 @@
-# base_url = 'http://matdata.shu.edu.cn'
-base_url = 'https://matdata.cloud'
+from template_tools.settings import base_url
+
 # 列出所有团队
 team_url = base_url + '/mgd/api/team/list'
 # 列出团队模板
@@ -16,6 +16,8 @@ file_upload_url = base_url + '/mgd/api/tool/file/upload'
 login_url = base_url + '/mgd/api/user/login'
 # 删除xml
 delete_url = base_url + '/mgd/api/data/delete'
+# 批量删除xml
+batch_delete_url = base_url + '/mgd/api/data/batch/delete'
 # 下载xml
 download_url = base_url + '/mgd/api/data/xml'
 # 查看数据列表
