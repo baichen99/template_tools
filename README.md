@@ -41,16 +41,17 @@ from template_tools.src.upload import upload_zip
 upload_zip('path/to/zip_folder', '测试数据', team_name='测试组', template_name='测试模板', compress=True)
 ```
 
-### Upload xmls/zips in a simple way
+### Upload xmls/zips in a simple way (Concurrent uploading)
 
-When you have a folder of xmls, you can use `upload_job` to upload xmls, but in this way, you cannot custom data's name, by default the format of name is `[template_name]_[index]`
+When you have a folder of xmls, you can use `upload_job` to upload xmls, but in this way, you cannot custom data's name by adding a prefix, by default the format of name is `[template_name]_[index]`
 
 ```python
 # upload_xml.py
 from template_tools.src.upload import upload_job
 
-
-upload_job(type='xml', team_name='测试组', template_name='测试模板', file_path='xmls')
+file_paths = ['各国金属牌号/xml',
+              '世界各国非调质钢牌号/xml']
+upload_job('xml', '测试团队', '测试模板', file_paths, prefix='测试数据', max_workers=5)
 ```
 
 Same to zips:

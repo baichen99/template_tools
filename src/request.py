@@ -1,10 +1,10 @@
 import json
 import requests
 from template_tools.settings import token
-from retrying import retry
+# from retrying import retry
 
 
-@retry(stop_max_attempt_number=3)
+# @retry(stop_max_attempt_number=3)
 def request(url, method, token=token, *args, **kwargs):
     headers = kwargs.get('headers', {}) or {
         'Authorization': f'Bearer {token}',

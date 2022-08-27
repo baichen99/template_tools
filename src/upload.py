@@ -12,6 +12,9 @@ from template_tools.src.urls import file_upload_url, \
     add_url, \
     upload_url
 from template_tools.src.info import get_records_num, get_team_id_by_team_name, get_template_id_by_template_name
+import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from itertools import repeat
 
 
 def upload_asset(file_obj):
@@ -24,26 +27,35 @@ def upload_asset(file_obj):
     return f'/mgd/rest/blob/download/{file_id}'
 
 
-def upload_job(type='xml', team_name='', template_name='', file_path='', compress=False):
+def upload_job(type='xml', team_name='', template_name='', file_paths='', prefix='', compress=True, max_workers=10):
     idx = get_records_num(team_name, template_name) + 1
+    prefix = prefix or template_name
     if type == 'xml':
-        for file in tqdm(glob(os.path.join(file_path, '*.xml'))):
-          try:
-            upload_xml(file, f'{template_name}_{idx}',
-                       team_name, template_name)
-            idx += 1
-          except Exception as e:
-            print(e)
+        files = []
+        for file_path in file_paths:
+            files.extend(glob(os.path.join(file_path, '*.xml')))
+        names = [f'{prefix}_{i}' for i in range(idx, idx+len(files))]
+
+        with tqdm(files) as pbar:
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                futures = [executor.submit(upload_xml,
+                                           files[i], names[i], team_name, template_name) for i in range(len(files))]
+                for future in as_completed(futures):
+                    pbar.update(1)
+
     elif type == 'zip':
-        for folder in tqdm(glob(os.path.join(file_path, '*'))):
-            if not os.path.isdir(folder):
-                continue
-            try:
-                upload_zip(folder, f'{template_name}_{idx}',
-                           team_name, template_name, compress)
-                idx += 1
-            except Exception as e:
-                print(e)
+        files = []
+        for file_path in file_paths:
+            files.extend(glob(os.path.join(file_path, '*')))
+        names = [f'{prefix}_{i}' for i in range(idx, idx+len(files))]
+
+        with tqdm(files) as pbar:
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                futures = [executor.submit(upload_zip, files[i], names[i],
+                                           team_name, template_name, compress) for i in range(len(files))]
+                for future in as_completed(futures):
+                    pbar.update(1)
+
     else:
         raise Exception('type error')
 
@@ -66,7 +78,7 @@ def upload_xml(file_path, name, team_name, template_name):
     return rsp
 
 
-def upload_zip(file_path, name, team_name, template_name, compress=False):
+def upload_zip(file_path, name, team_name, template_name, compress=True):
     team_id = get_team_id_by_team_name(team_name)
     _, template_edition_id = get_template_id_by_template_name(
         team_name, template_name)
