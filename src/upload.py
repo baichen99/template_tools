@@ -12,9 +12,7 @@ from template_tools.src.urls import file_upload_url, \
     add_url, \
     upload_url
 from template_tools.src.info import get_records_num, get_team_id_by_team_name, get_template_id_by_template_name
-import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from itertools import repeat
 
 
 def upload_asset(file_obj):
