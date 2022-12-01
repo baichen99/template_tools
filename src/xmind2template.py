@@ -76,6 +76,8 @@ def createUnitValueNode(node):
 
     unit = node.get('topics')[0].get('title')
     unit = unit[len('unit:'):]
+    name, zh, en = getNodeDesc(node)
+
     return {
         "_id": hash(time.time()),
         "name": name,
@@ -87,34 +89,7 @@ def createUnitValueNode(node):
         "childrenVisible": "true",
         "enUS": en,
         "zhCN": zh,
-        "children": [
-                {
-                    "_id": hash(time.time()),
-                    "name": "_value",
-                    "type": "uncheck-stringtype",
-                    "typename": "字符型",
-                    "default": "",
-                    "fixed": "",
-                    "required": "false",
-                    "childrenVisible": "true",
-                    "enUS": "_value",
-                    "zhCN": "值",
-                    "children": []
-                },
-            {
-                    "_id": hash(time.time()),
-                    "name": "_unit",
-                    "type": "uncheck-stringtype",
-                    "typename": "字符型",
-                    "default": "",
-                    "fixed": unit,
-                    "required": "false",
-                    "childrenVisible": "true",
-                    "enUS": "_unit",
-                    "zhCN": "单位",
-                    "children": []
-                }
-        ]
+        "unit": unit,
     }
 
 
