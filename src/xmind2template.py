@@ -5,12 +5,17 @@ import json
 from pygtrans import Translate, Null
 import xmindparser
 from template_tools.src.utils import make_python_identifier
+import uuid
+from .utils import check_json_key_unique
 
 
 client = Translate()
 
 # ------------ create a node ------------
 
+def get_id():
+    # make sure id is unique and id is a num
+    return str(uuid.uuid4()).replace('-', '')[:16]
 
 def getNodeDesc(node):
     """get key, name(zhCN), name(enUS) of node
@@ -40,7 +45,7 @@ def getNodeDesc(node):
 def createValueNode(node):
     name, zh, en = getNodeDesc(node)
     return {
-        "_id": hash(time.time()),
+        "_id": get_id(),
         "name": name,
         "type": "uncheck-stringtype",
         "typename": "字符型",
@@ -57,7 +62,7 @@ def createValueNode(node):
 def createFileNode(node):
     name, zh, en = getNodeDesc(node)
     return {
-        "_id": hash(time.time()),
+        "_id": get_id(),
         "name": name,
         "type": "file-list",
         "typename": "文件型",
@@ -79,7 +84,7 @@ def createUnitValueNode(node):
     name, zh, en = getNodeDesc(node)
 
     return {
-        "_id": hash(time.time()),
+        "_id": get_id(),
         "name": name,
         "type": "value-with-unit",
         "typename": "带单位数值",
@@ -87,6 +92,7 @@ def createUnitValueNode(node):
         "fixed": "",
         "required": "false",
         "childrenVisible": "true",
+        "children": [],
         "enUS": en,
         "zhCN": zh,
         "unit": unit,
@@ -104,7 +110,7 @@ def createTableNode(node):
         elif checkFileFiled(child):
             children.append(createFileNode(child))
     return {
-        "_id": hash(time.time()),
+        "_id": get_id(),
         "name": name,
         "type": "table",
         "typename": "表格型",
@@ -135,7 +141,7 @@ def createArrayNode(node):
         elif checkContainer(child):
             children.append(createContainerNode(child))
     return {
-        "_id": hash(time.time()),
+        "_id": get_id(),
         "name": name,
         "type": "array",
         "typename": "数组型",
@@ -166,7 +172,7 @@ def createContainerNode(node):
         elif checkContainer(child):
             children.append(createContainerNode(child))
     return {
-        "_id": hash(time.time()),
+        "_id": get_id(),
         "name": name,
         "type": "container",
         "typename": "容器型",
@@ -242,7 +248,8 @@ def contain_chinese(s):
 
 
 def escape(s):
-    return make_python_identifier(s)[0]
+    # replace('_', '-')：与前端保持一致
+    return make_python_identifier(s)[0].replace('_', '-')
 
 
 def zh2en(content):
@@ -265,6 +272,8 @@ def getTemplate(xmind_path, from_json=None, dest='template.json'):
 
     with open(dest, 'w', encoding='utf-8') as f:
         out = createContainerNode(data)
+        # if check_json_key_unique(out):
+        #     print('json key唯一性检查通过')
         out = json.dumps(out, ensure_ascii=False)
         f.write(out)
 
